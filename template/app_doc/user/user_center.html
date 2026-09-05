@@ -219,5 +219,8 @@
 				})
 			}
 		</script>
+{% if ai_status == '1' %}
+    {% include 'app_ai/chatDialog.html' %}
+{% endif %}
 	</body>
 </html>

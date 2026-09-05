@@ -10,6 +10,7 @@ from django.core.paginator import Paginator,PageNotAnInteger,EmptyPage,InvalidPa
 from django.core.exceptions import PermissionDenied,ObjectDoesNotExist
 from django.core.serializers import serialize
 from app_doc.models import Project,Doc,DocTemp
+from app_ai.utils import ai_sync_doc,ai_del_doc # AI知识库同步
 from django.contrib.auth.models import User
 from rest_framework.views import APIView # 视图
 from rest_framework.response import Response # 响应
@@ -1161,6 +1162,8 @@ def create_doc(request):
                                 if t != '':
                                     tag = Tag.objects.get_or_create(name=t,create_user=request.user)
                                     DocTag.objects.get_or_create(tag=tag[0],doc=doc)
+                            # AI知识库同步索引
+                            ai_sync_doc(doc)
 
                             return JsonResponse({'status': True, 'data': {'pro': project, 'doc': doc.id}})
                         except Exception as e:
@@ -1298,6 +1301,8 @@ def modify_doc(request,doc_id):
                                     if t not in current_doc_tags and current_doc_tags != '':
                                         tag = Tag.objects.get_or_create(name=t, create_user=request.user)
                                         DocTag.objects.get_or_create(tag=tag[0], doc=doc)
+                            # AI知识库同步索引（重新获取文档以取最新状态）
+                            ai_sync_doc(Doc.objects.get(id=doc_id))
 
                             return JsonResponse({'status': True, 'data': _('修改成功')})
                         except:
@@ -1356,6 +1361,8 @@ def del_doc(request):
                     chr_doc_ids = chr_doc.values_list('id',flat=True) # 提取下级文档的ID
                     chr_doc.update(status=3,modify_time=datetime.datetime.now()) # 修改下级文档的状态为删除
                     Doc.objects.filter(parent_doc__in=list(chr_doc_ids)).update(status=3,modify_time=datetime.datetime.now()) # 修改下级文档的下级文档状态
+                    # AI知识库同步删除切片
+                    ai_del_doc(doc.id)
 
                     return JsonResponse({'status': True, 'data': _('删除完成')})
                 else:
@@ -1370,6 +1377,9 @@ def del_doc(request):
                     else:
                         Doc.objects.filter(id__in=docs,create_user=request.user).update(status=3,modify_time=datetime.datetime.now())
                         Doc.objects.filter(parent_doc__in=docs).update(status=3,modify_time=datetime.datetime.now())
+                    for id in docs:
+                        # AI知识库同步删除切片
+                        ai_del_doc(id)
                     return JsonResponse({'status': True, 'data': _('删除完成')})
                 except:
                     return JsonResponse({'status': False, 'data': _('非法请求')})
@@ -1678,6 +1688,8 @@ def doc_recycle(request):
                         doc.save()
                     # 删除文档
                     elif types == 'del':
+                        # AI知识库同步删除切片
+                        ai_del_doc(doc.id)
                         # 删除文档历史、分享、标签
                         DocHistory.objects.filter(doc=doc).delete()
                         DocShare.objects.filter(doc=doc).delete()
@@ -1693,6 +1705,8 @@ def doc_recycle(request):
             elif types == 'empty':
                 docs = Doc.objects.filter(status=3,create_user=request.user)
                 for doc in docs:
+                    # AI知识库同步删除切片
+                    ai_del_doc(doc.id)
                     # 删除文档历史、分享、标签
                     DocHistory.objects.filter(doc=doc).delete()
                     DocShare.objects.filter(doc=doc).delete()

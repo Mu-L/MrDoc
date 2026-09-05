@@ -19,6 +19,7 @@ from rest_framework.authentication import SessionAuthentication
 from app_doc.models import *
 from app_api.serializers_app import *
 from app_api.auth_app import AppAuth,AppMustAuth
+from app_ai.utils import ai_sync_doc,ai_del_doc # AI知识库同步
 from app_doc.views import validateTitle
 from app_doc.util_upload_img import img_upload,base_img_upload
 from loguru import logger
@@ -533,6 +534,8 @@ class DocView(APIView):
                         create_user=request.user,
                         status = status
                     )
+                    # AI知识库同步索引
+                    ai_sync_doc(doc)
                     return Response({'code':0,'data':{'pro':project,'doc':doc.id}})
                 else:
                     return Response({'code':2,'data':_('无权操作此文集')})
@@ -575,6 +578,8 @@ class DocView(APIView):
                         modify_time = datetime.datetime.now(),
                         status = status
                     )
+                    # AI知识库同步索引（重新获取文档以取最新状态）
+                    ai_sync_doc(Doc.objects.get(id=doc_id))
                     return Response({'code': 0,'data':_('修改成功')})
                 else:
                     return Response({'code':2,'data':_('未授权请求')})
@@ -607,6 +612,8 @@ class DocView(APIView):
                     doc.status = 3
                     doc.modify_time = datetime.datetime.now()
                     doc.save()
+                    # AI知识库同步删除切片
+                    ai_del_doc(doc.id)
                     # 修改其下级所有文档状态为删除
                     chr_doc = Doc.objects.filter(parent_doc=doc_id)  # 获取下级文档
                     chr_doc_ids = chr_doc.values_list('id', flat=True)  # 提取下级文档的ID

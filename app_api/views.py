@@ -15,6 +15,7 @@ from app_doc.util_upload_img import upload_generation_dir,base_img_upload,url_im
 from app_doc.util_upload_file import handle_attachment_upload
 from app_doc.utils import find_doc_next,find_doc_previous
 from app_api.models import UserToken
+from app_ai.utils import ai_sync_doc,ai_del_doc # AI知识库同步
 from app_doc.models import Project, Doc, DocHistory, Image, ProjectCollaborator
 from app_api.serializers_app import ImageSerializer,ProjectSerializer
 from app_api.utils import read_add_projects, remove_doc_tag, is_edit_authorized
@@ -609,6 +610,8 @@ def create_doc(request):
                     parent_doc=parent_doc,  # 上级文档
                     create_user=token.user  # 创建的用户
                 )
+            # AI知识库同步索引
+            ai_sync_doc(doc)
             return JsonResponse({'status': True, 'data': doc.id})
         else:
             return JsonResponse({'status':False,'data':_('非法请求')})
@@ -674,6 +677,8 @@ def modify_doc(request):
             )
         elif doc.editor_mode == 4: # 在线表格
             pass
+        # AI知识库同步索引（重新获取文档以取最新状态）
+        ai_sync_doc(Doc.objects.get(id=doc_id))
         return JsonResponse({'status': True, 'data': 'ok'})
 
     except ObjectDoesNotExist:
@@ -681,7 +686,7 @@ def modify_doc(request):
     except:
         logger.exception("token修改文档异常")
         return JsonResponse({'status':False,'data':'系统异常'})
-    
+
 # 上传图片
 @csrf_exempt
 @require_http_methods(['GET','POST'])
@@ -787,6 +792,8 @@ def delete_doc(request):
                 status=3,
                 modify_time=datetime.datetime.now(),
             )
+            # AI知识库同步删除切片
+            ai_del_doc(doc_id)
             return JsonResponse({'status': True, 'data': 'ok'})
         else:
             return JsonResponse({'status':False,'data':'非法请求'})
@@ -794,4 +801,25 @@ def delete_doc(request):
         return JsonResponse({'status': False, 'data': 'token无效'})
     except:
         logger.exception("token修改文档异常")
+        return JsonResponse({'status':False,'data':'系统异常'})
+
+
+# AI流式对话接口的Token封装，内部调用 /ai/chat/stream/
+@csrf_exempt
+@require_http_methods(['POST'])
+def ai_chat_stream(request):
+    token = request.GET.get('token', '')
+    from app_admin.models import SysSetting
+    ai_status = getattr(SysSetting.objects.filter(types='ai', name='ai_status').first(), 'value', '')
+    if ai_status != '1':
+        return JsonResponse({'status': False, 'data': _('AI功能未启用')})
+    try:
+        token = UserToken.objects.get(token=token)
+        request.user = token.user
+        from app_ai.view.chat import ai_chat_stream as origin_ai_chat_stream
+        return origin_ai_chat_stream(request)
+    except ObjectDoesNotExist:
+        return JsonResponse({'status': False, 'data': _('token无效')})
+    except:
+        logger.exception("token调用AI流式对话接口异常")
         return JsonResponse({'status':False,'data':'系统异常'})

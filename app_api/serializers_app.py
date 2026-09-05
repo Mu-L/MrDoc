@@ -10,6 +10,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from app_doc.models import *
 from app_admin.models import RegisterCode
+from app_ai.models import AIProvider, Prompt
 
 
 # 用户序列化器
@@ -139,3 +140,41 @@ class AttachmentSerializer(ModelSerializer):
 
     def get_username(self,obj):
         return obj.user.username
+
+# AI模型供应商序列化器
+class AIProviderSerializer(ModelSerializer):
+    class Meta:
+        model = AIProvider
+        fields = "__all__"
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def create(self, validated_data):
+        from app_admin.utils import encrypt_data
+        api_key = validated_data.get("api_key")
+        if api_key:
+            validated_data["api_key"] = encrypt_data(api_key)
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        from app_admin.utils import encrypt_data
+        api_key = validated_data.get("api_key", None)
+        if api_key in (None, "", "******"):
+            # 不修改原值
+            validated_data.pop("api_key", None)
+        else:
+            validated_data["api_key"] = encrypt_data(api_key)
+        return super().update(instance, validated_data)
+
+    def to_representation(self, instance):
+        """返回时不显示 api_key 或返回部分掩码"""
+        data = super().to_representation(instance)
+        if "api_key" in data:
+            data["api_key"] = "******"
+        return data
+
+# Prompt序列化器
+class PromptSerializer(ModelSerializer):
+    class Meta:
+        model = Prompt
+        fields = "__all__"
+        read_only_fields = ['id', 'create_time', 'modify_time']

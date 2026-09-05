@@ -1,0 +1,89 @@
+{% if ai_chat_status == '1' %}
+    {% if ai_chat_role == '1' or ai_chat_role == '2' and request.user.is_authenticated %}
+        <iframe
+            src="/ai/chat/"
+            id="ai-chat-iframe"
+            allow="fullscreen;microphone"
+        ></iframe>
+        <div id="chat-bubble-btn">
+            <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">
+              <svg id="openIcon" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" font-family="Arial, sans-serif" font-size="20" fill="white">AI</text>              </svg>
+              <svg id="closeIcon" style="display:none" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M18 18L6 6M6 18L18 6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </div>
+          </div>
+    {% endif %}
+{% endif %}
+
+<style>
+  #chat-bubble-btn {
+    position: fixed;
+    bottom: 1rem;
+    right: 5rem;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: #1C64F2;
+    cursor: pointer;
+    z-index: 2147483641;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+  #ai-chat-iframe {
+    position: fixed;
+    display: none; /* 默认隐藏 */
+    right: 1rem;
+    bottom: 4.5rem; /* 按钮上方留点距离 */
+    width: 24rem;
+    max-width: calc(-2rem + 100vw);
+    height: 50.75rem;
+    max-height: calc(-6rem + 100vh);
+    border: none;
+    border-radius: 12px;
+    z-index: 2147483640;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+</style>
+
+<script>
+    const btn = document.getElementById("chat-bubble-btn");
+    const iframe = document.getElementById("ai-chat-iframe");
+    const openIcon = document.getElementById("openIcon");
+    const closeIcon = document.getElementById("closeIcon");
+
+    let open = false;
+    // 控制聊天助手是否显示
+    btn?.addEventListener("click", () => {
+      open = !open;
+      iframe.style.display = open ? "block" : "none";
+      openIcon.style.display = open ? "none" : "block";
+      closeIcon.style.display = open ? "block" : "none";
+    });
+
+    // 控制聊天助手是否全屏显示
+    if(iframe){
+      iframe.onload = () => {
+          const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+          const iframeFullscreenToggle = iframeDoc.querySelector("#iframeFullscreenToggle");
+
+          // 直接绑定事件
+          iframeFullscreenToggle.addEventListener("click", () => {
+              if (iframe.style.width === "100%") {
+                  iframe.style.width = "24rem"; // 小屏
+                  iframe.style.height = "50rem";
+                  iframeFullscreenToggle.querySelector("svg path").setAttribute("d", "M6.41421 5H10V3H3V10H5V6.41421L9.29289 10.7071L10.7071 9.29289L6.41421 5ZM21 14H19V17.5858L14.7071 13.2929L13.2929 14.7071L17.5858 19H14V21H21V14Z");
+              } else {
+                  iframe.style.width = "100%"; // 全屏
+                  iframe.style.height = "100%";
+                  iframeFullscreenToggle.querySelector("svg path").setAttribute("d", "M14 3v2h3.5858l-4.2929 4.2929 1.4142 1.4142L19 6.4142V10h2V3h-7zM5 14H3v7h7v-2H6.4142l4.2929-4.2929-1.4142-1.4142L5 17.5858V14z");
+              }
+          });
+      };
+    }
+  </script>

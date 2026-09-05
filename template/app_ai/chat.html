@@ -1,0 +1,281 @@
+<!-- chat.html - Django模板文件 -->
+{% load static %}
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI智能助手 - {% if site_name != None and site_name != '' %}{{site_name}} {% else %}{% trans "站点标题" %}{% endif %}</title>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+
+    <style>
+        /* 基础样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-wrapper {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .chat-container {
+            width: 100%;
+            height: 100%;
+            max-height: 800px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            display: flex;
+            overflow: hidden;
+        }
+
+        .main-chat {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #iframeFullscreenToggle {
+            position: fixed;       /* 固定定位，始终相对于 iframe 窗口 */
+            top: 1.5rem;             /* 距离顶部 1rem，可调整 */
+            right: 1.5rem;           /* 距离右边 1rem，可调整 */
+            z-index: 9999;         /* 保证在最上层 */
+            background: rgba(255,255,255,0.9); /* 半透明背景，可选 */
+            border: none;
+            border-radius: 4px;
+            padding: 0.3rem;
+            outline: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #iframeFullscreenToggle:focus {
+            outline: none;  /* 去掉点击或键盘聚焦时的黑框 */
+        }
+        #iframeFullscreenToggle svg {
+            width: 1.2rem;        /* 图标大小 */
+            height: 1.2rem;
+        }
+
+        /* 加载状态 */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e2e8f0;
+            border-left: 4px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- CSRF Token -->
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
+    <!-- 加载状态 -->
+    <div class="loading-overlay hidden" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <div class="app-container">
+        <!-- 聊天区域 -->
+        <main class="chat-wrapper">
+            <div class="chat-container">
+                <!-- 主聊天区域 -->
+                <div class="main-chat">
+                    <mrdoc-ai-chat
+                        api-endpoint="{% url 'ai_chat_stream' %}"
+                        text-generate-endpoint="{% url 'ai_text_genarate' %}"
+                        user-id="{{ request.user.id }}"
+                        username="{{ request.user.username }}"
+                        welcome_str = "{{ai_chat_welcome}}"
+                        avatar_icon = "{{ai_chat_avatar}}"
+                    ></mrdoc-ai-chat>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <button id="iframeFullscreenToggle">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="remixicon h-[18px] w-[18px] text-text-primary-on-surface"><path d="M6.41421 5H10V3H3V10H5V6.41421L9.29289 10.7071L10.7071 9.29289L6.41421 5ZM21 14H19V17.5858L14.7071 13.2929L13.2929 14.7071L17.5858 19H14V21H21V14Z"></path></svg>
+    </button>
+
+    <!-- 聊天组件模板（mrdoc-chat-component.js 硬编码引用此模板ID） -->
+    <template id="enhanced-dify-chat-template">
+        <link rel="stylesheet" href="{% static 'mr-marked/marked.css' %}">
+        <link rel="stylesheet" href="{% static 'mrdoc/mrdoc-chat-component.css' %}">
+        <div class="chat-container">
+            <div class="chat-header">
+                <div class="chat-avatar">AI</div>
+                <div class="chat-info">
+                    <div class="chat-title">{{site_name}} AI智能助手</div>
+                    <div class="chat-subtitle">基于AI + 知识库提供专业的AI对话服务</div>
+                </div>
+
+                <div class="chat-actions">  <!-- 功能未开发，暂时隐藏 -->
+                    <!-- <button class="action-btn" id="clearBtn">清空对话</button> -->
+                    <!-- <button class="action-btn" id="exportBtn">导出对话</button> -->
+                </div>
+            </div>
+
+            <div class="chat-messages" id="messages">
+                <div class="empty-state" id="emptyState">
+                    <svg class="empty-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                    <div class="empty-title">开始对话</div>
+                    <div class="empty-subtitle">输入你的问题，AI助手将为你提供帮助</div>
+                </div>
+            </div>
+
+            <div class="typing-indicator" id="typingIndicator">
+                <div class="typing-content">
+                    <span class="typing-text">AI正在思考</span>
+                    <div class="typing-dots">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chat-input-container">
+                <div class="chat-input-wrapper">
+                    <textarea
+                        id="chatInput"
+                        class="chat-input"
+                        placeholder="输入你的问题..."
+                        rows="1"
+                    ></textarea>
+                    <div class="input-actions">
+                        <button id="sendButton" class="send-button">
+                            <svg class="send-icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                            </svg>
+                            发送
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <script src="{% static 'mr-marked/marked.min.js' %}?version={{mrdoc_version}}"></script>
+    <script>
+        var marked = new markedParse();
+    </script>
+    <!-- 引入聊天组件脚本 -->
+    <script src="{% static 'mrdoc/mrdoc-chat-component.js' %}?version={{mrdoc_version}}"></script>
+
+    <script>
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 隐藏加载状态
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            if (loadingOverlay) {
+                loadingOverlay.classList.add('hidden');
+            }
+        });
+
+        function showNotification(message, type = 'info') {
+            // 创建通知元素
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'error' ? '#ef4444' : '#10b981'};
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+                z-index: 10000;
+                animation: slideInRight 0.3s ease-out;
+            `;
+            notification.textContent = message;
+
+            document.body.appendChild(notification);
+
+            // 3秒后自动消失
+            setTimeout(() => {
+                notification.style.animation = 'slideOutRight 0.3s ease-in';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        // 添加动画样式
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideInRight {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+
+            @keyframes slideOutRight {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

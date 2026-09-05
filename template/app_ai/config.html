@@ -17,7 +17,9 @@
         <div class="layui-tab">
           <ul class="layui-tab-title">
             <li class="layui-this">基础配置</li>
-            <li>Dify配置</li>
+            <li>AI模型供应商</li>
+            <li>Prompt 管理</li>
+            <li>文档索引管理</li>
           </ul>
           <div class="layui-tab-content">
             <div class="layui-tab-item layui-show">
@@ -38,24 +40,68 @@
                             {% endif %}
                             </div>
                         </div>
-                        <!-- 框架选择 -->
-                        <div class="layui-form-item">
-                            <label class="layui-form-label">AI框架</label>
-                            <div class="layui-input-inline">
-                            <select name="ai_frame" lay-verify="required">
-                                <option value=""></option>
-                                {% for frame in ai_frames %}
-                                <option value="{{frame.value}}">{{frame.name}}</option>
-                                {% endfor %}
-                            </select>
-                            </div>
-                        </div>
                         <div class="layui-form-item">
                             <div class="layui-input-block">
                             <button class="pear-btn pear-btn-primary pear-btn-sm" id="save_basic_config">保存</button>
                             </div>
                         </div>
                       </div>
+                    </div>
+                </div>
+
+                <div class="layui-form" lay-filter="ai-chat-config">
+                    <div class="layui-card settings-card">
+                      <div class="layui-card-header">聊天助手</div>
+                      <div class="layui-card-body">
+                        <!-- 网页聊天对话框显示 -->
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">状态</label>
+                            <div class="layui-input-block">
+                                <input type="radio" name="ai_chat_status" value="1" title="启用" {% if ai_chat_status == '1' %}checked{% endif %}>
+                                <input type="radio" name="ai_chat_status" value="0" title="关闭" {% if ai_chat_status != '1' %}checked{% endif %}>
+                            </div>
+                        </div>
+                        <!-- 聊天对话框权限 -->
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">可见范围</label>
+                            <div class="layui-input-block">
+                                <input type="radio" name="ai_chat_role" value="1" title="所有访客" {% if ai_chat_role == '1' %}checked{% endif %}>
+                                <input type="radio" name="ai_chat_role" value="2" title="已登录用户" {% if ai_chat_role != '1' %}checked{% endif %}>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                          <label class="layui-form-label">对话频率限制</label>
+                          <div class="layui-input-inline">
+                            <select name="ai_chat_rate_limit" lay-verify="required">
+                              <option value="-1">无限制</option>
+                              <option value="1">每分钟1次</option>
+                              <option value="5">每分钟5次</option>
+                              <option value="10">每分钟10次</option>
+                              <option value="20">每分钟20次</option>
+                              <option value="30">每分钟30次</option>
+                              <option value="40">每分钟40次</option>
+                            </select>
+                          </div>
+                          <div class="layui-form-mid layui-word-aux">以用户为对象进行对 AI 接口对话请求频率进行限制。</div>
+                        </div>
+                        <!-- Prompt 选择 -->
+                        <div class="layui-form-item">
+                          <label class="layui-form-label">Prompt</label>
+                          <div class="layui-input-block">
+                            <select name="ai_chat_prompt_id">
+                              <option value="">（不选择，使用系统默认 Prompt）</option>
+                            </select>
+                            <div style="margin-top: 6px; font-size: 12px; color: #999;">
+                              不选择 Prompt 时，将使用系统默认 Prompt。
+                            </div>
+                          </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <div class="layui-input-block">
+                            <button class="pear-btn pear-btn-primary pear-btn-sm" id="save_chat_config">保存</button>
+                            </div>
+                        </div>
+                        </div>
                     </div>
                 </div>
 
@@ -69,7 +115,7 @@
                           <div class="layui-input-block">
                               <input type="radio" name="ai_write_status" value="1" title="启用" {% if ai_write_status == '1' %}checked{% endif %}>
                               <input type="radio" name="ai_write_status" value="0" title="关闭" {% if ai_write_status != '1' %}checked{% endif %}>
-                          </div>                            
+                          </div>
                       </div>
                       <div class="layui-form-item">
                         <label class="layui-form-label">请求频率限制</label>
@@ -84,7 +130,7 @@
                             <option value="40">每分钟40次</option>
                           </select>
                         </div>
-                        <div class="layui-form-mid layui-word-aux">以用户为对象进行对 AI 接口请求频率进行限制。</div>                            
+                        <div class="layui-form-mid layui-word-aux">以用户为对象进行对 AI 接口请求频率进行限制。</div>
                       </div>
                       <div class="layui-form-item">
                           <div class="layui-input-block">
@@ -95,34 +141,50 @@
                   </div>
                 </div>
             </div>
-            
-              <!-- Dify开始 -->
-            <div class="layui-tab-item">
-               <div class="layui-form" lay-filter="dify-config">
-                 <!-- 启用状态 -->
-                 <div class="layui-form-item">
-                    <label class="layui-form-label">API地址</label>
-                    <div class="layui-input-block">
-                      <input type="text" name="ai_dify_api_address" id="dify_api_address" placeholder="请输入Dify API 地址，例如 https://api.dify.ai/v1" autocomplete="off" class="layui-input" value="{{ai_dify_api_address}}">
-                    </div>
-                 </div>
 
-                 <div class="layui-form-item">
-                    <label class="layui-form-label">文本生成 API 密钥</label>
-                    <div class="layui-input-block">
-                      <input type="text" name="ai_dify_textgenerate_api_key" id="dify_chat_api_key" placeholder="请输入Dify 文本生成型 API 密钥" autocomplete="off" class="layui-input" value="{{ai_dify_textgenerate_api_key}}">
-                    </div>
+            <!-- AI模型供应商 -->
+             <div class="layui-tab-item">
+              <div class="layui-row">
+                <div style="padding: 10px;">
+                  <button class="pear-btn pear-btn-primary pear-btn-sm" id="addProviderBtn">新增AI模型</button>
                 </div>
+                <table id="providerTable" lay-filter="providerTableFilter"></table>
+              </div>
+             </div>
+            <!-- AI模型供应商结束 -->
 
-                  <hr>
-                  <div class="layui-form-item">
-                    <div class="layui-input-block">
-                      <button class="pear-btn pear-btn-primary pear-btn-sm" id="save_dify_config">保存配置</button>
+            <!-- Prompt 管理 -->
+             <div class="layui-tab-item">
+              <div class="layui-row">
+                <div style="padding: 10px;">
+                  <button class="pear-btn pear-btn-primary pear-btn-sm" id="addPromptBtn">新建 Prompt</button>
+                </div>
+                <table id="promptTable" lay-filter="promptTableFilter"></table>
+              </div>
+             </div>
+            <!-- Prompt 管理结束 -->
+
+            <!-- 文档索引管理 -->
+            <div class="layui-tab-item">
+              <div class="layui-row layui-form" style="padding: 10px 0;">
+                <div class="layui-form-item">
+                  <div class="layui-inline">
+                    <label class="layui-form-label">搜索文档：</label>
+                    <div class="layui-input-inline" style="width: 200px;">
+                      <input type="text" id="searchDoc" name="searchDoc" placeholder="输入文档名称" class="layui-input">
                     </div>
                   </div>
+                  <div class="layui-inline">
+                    <button class="layui-btn layui-btn-sm layui-btn-normal" id="searchBtn">搜索</button>
+                    <button class="layui-btn layui-btn-sm layui-btn-primary" id="resetBtn">重置</button>
+                    <button class="layui-btn layui-btn-sm layui-btn-warm" id="rebuildAllBtn">重建全站索引</button>
+                    <button class="layui-btn layui-btn-sm layui-btn-danger" onclick="openRagDebug()">检索调试器</button>
+                  </div>
                 </div>
+              </div>
+              <table id="docIndexTable" lay-filter="docIndexTable"></table>
             </div>
-            <!-- Dify结束 -->
+            <!-- 文档索引管理结束 -->
           </div>
         </div>
     </div>
@@ -135,24 +197,40 @@
     width: 100px;
   }
 </style>
+<!-- 操作列模板 -->
+<script type="text/html" id="providerOperationBar">
+  <a class="pear-btn pear-btn-primary pear-btn-xs" lay-event="edit">编辑</a>
+  <a class="pear-btn pear-btn-danger pear-btn-xs" lay-event="delete">删除</a>
+</script>
+<script type="text/html" id="promptOperationBar">
+  <a class="pear-btn pear-btn-primary pear-btn-xs" lay-event="edit">编辑</a>
+  <a class="pear-btn pear-btn-danger pear-btn-xs" lay-event="delete">删除</a>
+</script>
+<!-- 创建时间 -->
+<script type="text/html" id="create-time">
+  {% verbatim %}
+  {{layui.util.toDateString(d.created_at || d.create_time,  "yyyy-MM-dd HH:mm:ss")}}
+  {% endverbatim %}
+</script>
+<!-- 更新时间 -->
+<script type="text/html" id="update-time">
+  {% verbatim %}
+  {{layui.util.toDateString(d.updated_at || d.update_time,  "yyyy-MM-dd HH:mm:ss")}}
+  {% endverbatim %}
+</script>
 
 <script src="{% static 'jquery/3.5.0/jquery.min.js' %}"></script>
 <script>
   $.ajaxSetup({
       data: {csrfmiddlewaretoken: '{{ csrf_token }}' },
+      headers: {"X-CSRFToken":'{{ csrf_token }}'},
   });
   var form = layui.form;
   var element = layui.element;
   var layer = layui.layer;
-  let dropdown = layui.dropdown;
   let table = layui.table;
-  // console.log(ai_dify_kb_list)
 
-  form.val('ai-basic-config',{ // AI基础配置
-    'ai_frame':'{{ai_frame}}'
-  })
-
-  form.val('ai-chat-config',{ // AI辅助写作配置
+  form.val('ai-chat-config',{ // 聊天助手配置
     'ai_chat_rate_limit': '{{ai_chat_rate_limit|default:"-1"}}'
   })
 
@@ -160,33 +238,81 @@
     'ai_write_rate_limit': '{{ai_write_rate_limit|default:"-1"}}'
   })
 
+  $(function(){
+    // 加载聊天助手 Prompt 下拉
+    loadChatPromptSelect();
+  });
+
+  // 加载聊天助手 Prompt 下拉选项
+  function loadChatPromptSelect() {
+    $.get('{% url "api-prompt-list" %}', function (res) {
+      const results = res.results || [];
+      const savedId = '{{ ai_chat_prompt_id }}';
+      results.forEach(function (p) {
+        const selected = String(p.id) === savedId ? 'selected' : '';
+        $('select[name="ai_chat_prompt_id"]').append(
+          `<option value="${p.id}" ${selected}>${p.name}</option>`
+        );
+      });
+      layui.form.render('select');
+    });
+  }
+
   // 保存AI基础配置
   saveAIBasicWork = function(){
     var formData = form.val('ai-basic-config');
-    // console.log(formData)
     var data = [
         {
           'type':'ai',
           'name':'ai_status',
           'value':formData['ai_status'],
         }
-        ,{
-          'type':'ai',
-          'name':'ai_frame',
-          'value':formData['ai_frame'],
-        }
     ]
-    // console.log(data)
     saveAiConfig(data);
   };
   $("#save_basic_config").click(function(){
     saveAIBasicWork();
   });
 
+  // 保存聊天助手配置
+  saveAIChatConfig = function(){
+    var formData = form.val('ai-chat-config');
+    var data = [
+        {
+            'type':'ai',
+            'name':'ai_chat_status',
+            'value':formData['ai_chat_status'],
+        }
+        ,{
+        'type':'ai',
+        'name':'ai_chat_role',
+        'value':formData['ai_chat_role'],
+        },
+        {
+          'type':'ai',
+          'name':'ai_chat_type',
+          'value':'default',
+        },
+        {
+          'type':'ai',
+          'name':'ai_chat_rate_limit',
+          'value':formData['ai_chat_rate_limit'],
+        },
+        {
+          'type':'ai',
+          'name':'ai_chat_prompt_id',
+          'value':formData['ai_chat_prompt_id'] || '',
+        }
+    ]
+    saveAiConfig(data);
+  }
+  $("#save_chat_config").click(function(){
+    saveAIChatConfig();
+  });
+
   // 保存AI写作配置
   saveAIWriteConfig = function(){
     var formData = form.val('ai-write-config');
-    console.log(formData)
     var data = [
         {
             'type':'ai',
@@ -199,31 +325,11 @@
             'value':formData['ai_write_rate_limit'],
         },
     ]
-    // console.log(data)
     saveAiConfig(data);
   }
   $("#save_write_config").click(function(){
     saveAIWriteConfig();
   });
-
-  // 保存dify配置
-  $("#save_dify_config").click(function(){
-    var formData = form.val('dify-config');
-    console.log(formData)
-    const result = [];
-
-    for (const key in formData) {
-      if (formData.hasOwnProperty(key)) {
-          result.push({ type: 'ai', name: key, value: formData[key] });
-      }
-    }
-    saveAiConfig(result);
-  });
-
-  
-
-
-
 
   // AI 接入通用配置保存函数
   saveAiConfig = function(data){
@@ -244,6 +350,429 @@
       })
   };
 
+  /*
+    AI 模型供应商
+  */
+  // 表格配置
+  table.render({
+        id: 'providerTable',
+        elem: '#providerTable',
+        url: '{% url "api-ai-providers-list" %}', // 对应接口
+        method: 'GET',
+        page: true, // 开启分页
+        skin: 'line',
+        cols: [[
+            { field: 'model_name', title: '模型名称', },
+            { field: 'model_type', title: '模型类型', },
+            { field: 'provider', title: '供应商', },
+            { field: 'api_key', title: 'APIKey', },
+            { field: 'base_url', title: '基础URL', },
+            { field: 'is_active', title: '是否启用', templet: d => d.is_active ? '<span style="color:green;">已启用</span>' : '<span style="color:red;">已禁用</span>', width: 100 },
+            { field: 'created_at', title: '创建时间', width: 180, templet:"#create-time" },
+            { field: 'updated_at', title: '更新时间', width: 180,templet:"#update-time" },
+            { fixed: 'right', title: '操作', toolbar: '#providerOperationBar', width: 150 }
+        ]],
+        parseData: function (res) {
+            // 解析返回的数据，适配 LayUI 的表格格式
+            return {
+                "code": 0, // 成功状态码
+                "msg": "", // 提示信息
+                "count": res.count, // 总记录数
+                "data": res.results // 数据列表
+            };
+        }
+    });
 
+    // 新增按钮事件
+    document.getElementById('addProviderBtn').addEventListener('click', function () {
+        openEditModal(); // 打开新增表单
+    });
+
+    // 工具栏监听
+    table.on('tool(providerTableFilter)', function (obj) {
+        const data = obj.data;
+        const event = obj.event;
+        if (event === 'edit') {
+            openEditModal(data);
+        } else if (event === 'delete') {
+            layer.confirm('确定要删除该模型吗？', function (index) {
+                $.ajax({
+                    url: `/ai/model-providers/${data.id}/`,
+                    method: 'DELETE',
+                    success: function () {
+                        layer.msg('删除成功');
+                        table.reload('providerTable');
+                    },
+                    error: function () {
+                        layer.msg('删除失败');
+                    }
+                });
+                layer.close(index);
+            });
+        }
+    });
+    // 打开新增/编辑窗口
+    function openEditModal(data = {}) {
+      layer.open({
+          type: 1,
+          title: data.id ? '编辑 AI 模型' : '新增 AI 模型',
+          area: ['600px', '700px'],
+          content: `
+              <form class="layui-form" style="padding: 20px;">
+                  <input type="hidden" name="id" value="${data.id || ''}">
+
+                  <!-- 模型供应商 -->
+                  <div class="layui-form-item">
+                      <label class="layui-form-label">模型供应商</label>
+                      <div class="layui-input-block">
+                          <select name="provider" lay-verify="required">
+                            <option value=""></option>
+                            <option value="giteeai">模力方舟（Gitee AI）</option>
+                            <option value="siliconflow">硅基流动（SiliconFlow）</option>
+                            <option value="ollama">Ollama</option>
+                            <option value="openai">通用OpenAI接口</option>
+                          </select>
+                      </div>
+                  </div>
+
+                  <!-- 密钥 -->
+                  <div class="layui-form-item">
+                      <label class="layui-form-label">密钥</label>
+                      <div class="layui-input-block">
+                          <input type="text" name="api_key" required lay-verify="required" placeholder="请输入密钥" class="layui-input" value="${data.api_key || ''}">
+                      </div>
+                  </div>
+
+                  <!-- 基础 URL -->
+                  <div class="layui-form-item">
+                      <label class="layui-form-label">基础 URL</label>
+                      <div class="layui-input-block">
+                          <input type="url" name="base_url" required lay-verify="required|url" placeholder="请输入基础 URL" class="layui-input" value="${data.base_url || ''}">
+                      </div>
+                  </div>
+
+                  <!-- 模型名称 -->
+                  <div class="layui-form-item">
+                      <label class="layui-form-label">模型名称</label>
+                      <div class="layui-input-block">
+                          <input type="text" name="model_name" required lay-verify="required" placeholder="请输入模型名称" class="layui-input" value="${data.model_name || ''}">
+                      </div>
+                  </div>
+
+                  <!-- 模型类型 -->
+                  <div class="layui-form-item">
+                      <label class="layui-form-label">模型类型</label>
+                      <div class="layui-input-block">
+                          <select name="model_type" lay-verify="required">
+                            <option value=""></option>
+                            <option value="text_generate">文本生成</option>
+                            <option value="embedding">向量化</option>
+                            <option value="reranker">重排</option>
+                          </select>
+                      </div>
+                  </div>
+
+                  <!-- 是否启用 -->
+                  <div class="layui-form-item">
+                      <label class="layui-form-label">是否启用</label>
+                      <div class="layui-input-block">
+                          <input type="checkbox" name="is_active" lay-skin="switch" lay-text="启用|禁用" ${data.is_active ? 'checked' : ''}>
+                      </div>
+                  </div>
+
+                  <!-- 提交和取消按钮 -->
+                  <div class="layui-form-item">
+                      <div class="layui-input-block">
+                          <button class="pear-btn pear-btn-primary" lay-submit lay-filter="saveModel">保存</button>
+                          <button class="pear-btn pear-btn-normal" type="button" onclick="layer.closeAll()">取消</button>
+                      </div>
+                  </div>
+              </form>
+          `,
+          success: function (layero, index) {
+              // 设置下拉框的初始值
+              if (data.provider) {
+                  $(layero).find('select[name="provider"]').val(data.provider);
+              }
+              if (data.model_type) {
+                  $(layero).find('select[name="model_type"]').val(data.model_type);
+              }
+              layui.form.render();
+              layui.form.on('submit(saveModel)', function (formData) {
+                  const formValues = formData.field;
+                  const method = formValues.id ? 'PUT' : 'POST';
+                  const url = formValues.id ? `/ai/model-providers/${formValues.id}/` : '{% url "api-ai-providers-list" %}';
+
+                  $.ajax({
+                      url: url,
+                      method: method,
+                      data: formValues,
+                      success: function () {
+                          layer.msg('保存成功');
+                          layui.table.reload('providerTable'); // 重新加载表格
+                          layer.close(index);
+                      },
+                      error: function () {
+                          layer.msg('保存失败');
+                      }
+                  });
+                  return false;
+              });
+          }
+      });
+  }
+
+  /*
+    Prompt 管理
+  */
+  $(function () {
+      // 修改时间模板
+      function modifyTimeTpl(d) {
+          return layui.util.toDateString(d.modify_time, "yyyy-MM-dd HH:mm:ss");
+      }
+
+      // 表格渲染
+      table.render({
+          id: 'promptTable',
+          elem: '#promptTable',
+          url: '{% url "api-prompt-list" %}',
+          method: 'GET',
+          page: true,
+          skin: 'line',
+          cols: [[
+              { field: 'name', title: '{% trans "名称" %}',  },
+              { field: 'desc', title: '{% trans "描述" %}',  },
+              { field: 'modify_time', title: '{% trans "修改时间" %}', width: 180, templet: modifyTimeTpl },
+              { fixed: 'right', title: '{% trans "操作" %}', toolbar: '#promptOperationBar', width: 180 }
+          ]],
+          parseData: function (res) {
+              return {
+                  "code": 0,
+                  "msg": "",
+                  "count": res.count,
+                  "data": res.results
+              };
+          }
+      });
+
+      // 新增按钮事件
+      document.getElementById('addPromptBtn').addEventListener('click', function () {
+          openPromptEditModal();
+      });
+
+      // 工具栏监听
+      table.on('tool(promptTableFilter)', function (obj) {
+          const data = obj.data;
+          const event = obj.event;
+          if (event === 'edit') {
+              openPromptEditModal(data);
+          } else if (event === 'delete') {
+              layer.confirm('{% trans "确定要删除该 Prompt 吗？" %}', function (index) {
+                  $.ajax({
+                      url: `/ai/prompts/api/${data.id}/`,
+                      method: 'DELETE',
+                      success: function () {
+                          layer.msg('{% trans "删除成功" %}');
+                          table.reload('promptTable');
+                      },
+                      error: function () {
+                          layer.msg('{% trans "删除失败" %}');
+                      }
+                  });
+                  layer.close(index);
+              });
+          }
+      });
+
+      // 打开新增/编辑窗口
+      function openPromptEditModal(data = {}) {
+          layer.open({
+              type: 1,
+              title: data.id ? '{% trans "编辑 Prompt" %}' : '{% trans "新建 Prompt" %}',
+              area: ['650px', '580px'],
+              content: `
+                  <form class="layui-form" style="padding: 20px;">
+                      <input type="hidden" name="id" value="${data.id || ''}">
+
+                      <div class="layui-form-item">
+                          <label class="layui-form-label">{% trans "名称" %}</label>
+                          <div class="layui-input-block">
+                              <input type="text" name="name" required lay-verify="required" placeholder="{% trans "请输入 Prompt 名称" %}" class="layui-input" value="${data.name || ''}">
+                          </div>
+                      </div>
+
+                      <div class="layui-form-item">
+                          <label class="layui-form-label">{% trans "描述" %}</label>
+                          <div class="layui-input-block">
+                              <input type="text" name="desc" placeholder="{% trans "请输入 Prompt 描述（可选）" %}" class="layui-input" value="${data.desc || ''}">
+                          </div>
+                      </div>
+
+                      <div class="layui-form-item">
+                          <label class="layui-form-label">{% trans "内容" %}</label>
+                          <div class="layui-input-block">
+                              <textarea name="value" required lay-verify="required" placeholder="{% trans "请输入 Prompt 内容" %}" class="layui-textarea" style="min-height: 180px;">${data.value || ''}</textarea>
+                          </div>
+                      </div>
+
+                      <div class="layui-form-item">
+                          <div class="layui-input-block">
+                              <div style="background: #f8f8f8; border: 1px solid #e6e6e6; border-radius: 4px; padding: 12px 15px; font-size: 13px; color: #666; line-height: 1.8;">
+                                  <strong>{% trans "支持变量：" %}</strong><br>
+                                  <code style="background: #fff; border: 1px solid #e2e2e2; padding: 2px 6px; border-radius: 3px; color: #c00;">&#123;&#123;context&#125;&#125;</code>
+                                  &mdash; {% trans "知识库检索内容" %}<br>
+                                  <code style="background: #fff; border: 1px solid #e2e2e2; padding: 2px 6px; border-radius: 3px; color: #c00;">&#123;&#123;question&#125;&#125;</code>
+                                  &mdash; {% trans "用户输入的问题" %}
+                              </div>
+                          </div>
+                      </div>
+
+                      <div class="layui-form-item">
+                          <div class="layui-input-block">
+                              <button class="pear-btn pear-btn-primary" lay-submit lay-filter="savePrompt">{% trans "保存" %}</button>
+                              <button class="pear-btn pear-btn-normal" type="button" onclick="layer.closeAll()">{% trans "取消" %}</button>
+                          </div>
+                      </div>
+                  </form>
+              `,
+              success: function (layero, index) {
+                  layui.form.render();
+                  layui.form.on('submit(savePrompt)', function (formData) {
+                      const formValues = formData.field;
+                      const method = formValues.id ? 'PUT' : 'POST';
+                      const url = formValues.id ? `/ai/prompts/api/${formValues.id}/` : '{% url "api-prompt-list" %}';
+
+                      delete formValues.id;
+
+                      $.ajax({
+                          url: url,
+                          method: method,
+                          data: formValues,
+                          success: function () {
+                              layer.msg('{% trans "保存成功" %}');
+                              layui.table.reload('promptTable');
+                              layer.close(index);
+                          },
+                          error: function (xhr) {
+                              let msg = '{% trans "保存失败" %}';
+                              try {
+                                  const resp = JSON.parse(xhr.responseText);
+                                  if (resp.name) {
+                                      msg = resp.name.join('; ');
+                                  }
+                              } catch(e) {}
+                              layer.msg(msg);
+                          }
+                      });
+                      return false;
+                  });
+              }
+          });
+      }
+  });
 </script>
+<script>
+  // 搜索按钮事件
+  document.getElementById('searchBtn').addEventListener('click', function() {
+    var searchText = document.getElementById('searchDoc').value;
+
+    table.reload('docIndexTable', {
+      where: {
+        kw: searchText
+      },
+      page: {curr: 1}
+    });
+  });
+
+  // 重置按钮事件
+  document.getElementById('resetBtn').addEventListener('click', function() {
+    document.getElementById('searchDoc').value = '';
+
+    table.reload('docIndexTable', {
+      where: {},
+      page: {curr: 1}
+    });
+  });
+
+  // 重建全站索引：引导使用manage命令（Web端同步执行耗时长，易超时）
+  document.getElementById('rebuildAllBtn').addEventListener('click', function() {
+    layer.alert(
+      '全站索引重建涉及大量文档的切片与向量化计算，耗时较长，不建议在Web端执行。<br><br>' +
+      '请管理员使用命令行方式重建：<br><br>' +
+      '<code style="display:block;padding:10px;background:#f8f8f8;border-radius:4px;word-break:break-all;">python manage.py rebuild_ai_index --projects=all</code><br><br>' +
+      '其他可选参数：<br>' +
+      '--projects=1,2,3（指定文集ID）<br>' +
+      '--roles=0,1（指定文集权限，0公开,1私密,2指定用户可见,3访问码可见）<br>' +
+      '--dry-run（仅预览执行范围，不实际执行）',
+      {title: '重建全站索引', icon: 0}
+    );
+  });
+
+  // 文档索引管理
+  table.render({
+    elem: '#docIndexTable',
+    url: '{% url "api-ai-doc-index" %}',
+    page: true,
+    skin: 'line',
+    cols: [[
+      {field: 'doc_title', title: '文档'},
+      {field: 'chunk_count', title: '切片数', width: 120},
+      {field: 'updated_at', title: '更新时间', width: 200},
+      {fixed: 'right', title: '操作', toolbar: '#docActions'}
+    ]]
+  });
+  // 监听文档索引行操作
+  table.on('tool(docIndexTable)', function (obj) {
+    var data = obj.data;
+
+    if (obj.event === 'del') {
+      layer.confirm('确认删除？', function (index) {
+        $.ajax({
+          url: '{% url "api-ai-doc-sections" %}',
+          type: 'DELETE',
+          dataType: 'json',
+          contentType: 'application/json',
+          data: JSON.stringify({doc_id: data.doc_id}),
+          success: function(res) {
+            layer.msg(res.msg);
+            table.reload('docIndexTable');
+          },
+          error: function () {
+            layer.msg('删除失败');
+          }
+        });
+      });
+    }
+
+    if (obj.event === 'rebuild') {
+      layer.confirm('确认重建此文档的AI切片索引和向量存储？', function (index) {
+        layer.load(2);
+        $.ajax({
+          url: '{% url "ai-rebuild-doc" %}',
+          type: 'POST',
+          dataType: 'json',
+          data: {doc_id: data.doc_id},
+          success: function(res) {
+            layer.closeAll('loading');
+            // 同步重建，直接展示结果
+            layer.msg(res.data);
+            table.reload('docIndexTable');
+          },
+          error: function () {
+            layer.closeAll('loading');
+            layer.msg('重建失败');
+          }
+        });
+      })
+    }
+  });
+</script>
+<script type="text/html" id="docActions">
+  {% verbatim %}
+  <a class="layui-btn layui-btn-xs layui-btn-primary" href="/ai/manage-doc-sections/{{d.doc_id}}/">查看切片</a>
+  <a class="layui-btn layui-btn-xs layui-btn-normal" lay-event="rebuild">重建</a>
+  <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+  {% endverbatim %}
+</script>
+<script src="{% static 'mrdoc/mrdoc-ai-rag-debug.js' %}"></script>
 {% endblock %}

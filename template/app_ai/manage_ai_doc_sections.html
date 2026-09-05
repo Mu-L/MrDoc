@@ -1,0 +1,122 @@
+{% extends 'app_admin/admin_base.html' %}
+{% load static %}
+{% load i18n %}
+{% block title %}{% trans "文档切片索引管理" %}{% endblock %}
+{% block content %}
+<div class="layui-card">
+    <div class="layui-card-body">
+        <div class="layui-row" style="padding-left:15px;">
+            <span class="layui-breadcrumb" lay-separator=">">
+            <a href="{% url 'ai_config' %}">{% trans "AI接入" %}</a>
+            <a><cite>{% trans "文档切片索引管理" %}</cite></a>
+            </span>
+        </div>
+    </div>
+</div>
+
+<div class="layui-card">
+    <div class="layui-card-body">
+        <div class="layui-card-header">
+        <div class="layui-row">
+            <span style="font-size:18px;">{% trans "文档：" %}<a href="{{doc.get_absolute_url}}" target="_blank">{{doc.name}}</a> {% trans "的切片索引管理" %}</span>
+        </div>
+        </div>
+        <div class="layui-row" >
+            <table class="layui-table" id="sectionTable" lay-filter="sectionTable"></table>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}
+{% block custom_script %}
+<script type="text/html" id="rowActions">
+  <a class="layui-btn layui-btn-xs layui-btn-normal" lay-event="rebuild">重建</a>
+  <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+</script>
+<script>
+    layui.use(['table', 'form', 'jquery','layer','element'], function() {
+        let table = layui.table;
+        let form = layui.form;
+        let $ = layui.jquery;
+        var layer = layui.layer;
+        let element = layui.element;
+        $.ajaxSetup({
+            data: {csrfmiddlewaretoken: '{{ csrf_token }}' },
+            headers: {"X-CSRFToken":'{{ csrf_token }}'},
+        });
+        table.render({
+            elem: '#sectionTable',
+            url: "{% url 'api-ai-doc-sections' %}",
+            page: true,
+            where: {
+                doc_id: '{{ doc_id }}'
+            },
+            limit: 10,
+            cols: [[
+                {field: 'id', title: 'ID', width: 80},
+                {field: 'chunk_index', title: '块序号', width: 100},
+                {field: 'section_title', title: '块标题', width: 200},
+                {field: 'content_preview', title: '块内容'},
+                {field: 'embedding_text', title: '向量化文本', width: 200},
+                {field: 'embedding_status', title: '状态', width: 100, templet: formatStatus},
+                {field: 'updated_at', title: '更新时间', width: 180},
+                {fixed: 'right', title: '操作', toolbar: '#rowActions', width: 180}
+            ]]
+        });
+
+        // 状态格式化
+        function formatStatus(d) {
+            if (d.embedding_status === 'done') return '<span style="color:green">成功</span>';
+            if (d.embedding_status === 'failed') return '<span style="color:red">失败</span>';
+            return '<span style="color:orange">未处理</span>';
+        }
+
+        // 监听操作
+        table.on('tool(sectionTable)', function (obj) {
+            var data = obj.data;
+            if (obj.event === 'del') {
+                layer.confirm('确认删除此切片索引吗？', function (index) {
+                    layer.load(2);
+                    $.ajax({
+                        url: "{% url 'api-ai-doc-sections' %}",
+                        type: 'DELETE',
+                        dataType: 'json',
+                        data: {id: data.id},
+                        success: function(res) {
+                            layer.closeAll('loading');
+                            layer.msg(res.data);
+                            table.reload('sectionTable');
+                        },
+                        error: function(res) {
+                            layer.closeAll('loading');
+                            layer.msg(res.data);
+                        }
+                    });
+                });
+            }
+
+            if (obj.event === 'rebuild') {
+                layer.confirm('确认重建此切片索引吗？', function (index) {
+                    layer.load(2);
+                    $.ajax({
+                        url: "{% url 'ai-rebuild-section' %}",
+                        type: 'POST',
+                        dataType: 'json',
+                        data: {section_id: data.id},
+                        success: function(res) {
+                            layer.closeAll('loading');
+                            layer.msg(res.data);
+                            table.reload('sectionTable');
+                        },
+                        error: function(res) {
+                            layer.closeAll('loading');
+                            layer.msg(res.data);
+                        }
+                    });
+                });
+            }
+        });
+    })
+</script>
+{% endblock %}
