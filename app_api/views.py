@@ -496,30 +496,27 @@ def get_images(request):
     try:
         # 验证Token
         token = UserToken.objects.get(token=token)
-        if token.user.is_writer and token.user.writer_value[2] == '1':
-            imgs = Image.objects.filter(user=token.user)
-            paginator = Paginator(imgs, 10)
-            page = request.GET.get('page', 1)
-            try:
-                imgs_page = paginator.page(page)
-            except PageNotAnInteger:
-                imgs_page = paginator.page(1)
-            except EmptyPage:
-                return JsonResponse({'status': True, 'data': {'total_cnt':0}})
+        imgs = Image.objects.filter(user=token.user)
+        paginator = Paginator(imgs, 10)
+        page = request.GET.get('page', 1)
+        try:
+            imgs_page = paginator.page(page)
+        except PageNotAnInteger:
+            imgs_page = paginator.page(1)
+        except EmptyPage:
+            return JsonResponse({'status': True, 'data': {'total_cnt':0}})
 
-            img_list = []
-            for img in imgs_page:
-                item = {
-                    'name':img.file_name,
-                    'path':img.file_path,
-                    'remark':img.remark,
-                    'create_time':img.create_time
-                }
-                img_list.append(item)
+        img_list = []
+        for img in imgs_page:
+            item = {
+                'name':img.file_name,
+                'path':img.file_path,
+                'remark':img.remark,
+                'create_time':img.create_time
+            }
+            img_list.append(item)
 
-            return JsonResponse({'status': True, 'data': {'imgs':img_list,'total_cnt':paginator.count,'total_page':paginator.num_pages}})
-        else:
-            return JsonResponse({'status':False,'data':_('用户无操作权限')})
+        return JsonResponse({'status': True, 'data': {'imgs':img_list,'total_cnt':paginator.count,'total_page':paginator.num_pages}})
     except ObjectDoesNotExist:
         return JsonResponse({'status': False, 'data': _('token无效')})
     except:
@@ -749,24 +746,6 @@ def upload_img_url(request):
         logger.error(_("token上传url图片异常"))
         return JsonResponse({'success':0,'data':_('上传出错')})
 
-# 上传附件
-@csrf_exempt
-@require_http_methods(['POST'])
-def upload_attachment(request):
-    attachment = request.FILES.get('attachment_upload', None)
-    token = request.GET.get('token', '')
-    try:
-        token = UserToken.objects.get(token=token)
-        if not (token.user.is_writer and token.user.writer_value[3] == '1'):
-            return JsonResponse({'status': False, 'data': _('用户无权限操作')})
-        result = handle_attachment_upload(attachment, token.user, request)
-        return JsonResponse({'status': result['status'], 'data': result['data']})
-    except ObjectDoesNotExist:
-        return JsonResponse({'status': False, 'data': _('token无效')})
-    except Exception:
-        logger.exception(_("上传出错"))
-        return JsonResponse({'status': False, 'data': _('上传出错')})
-
 # 删除文档（软删除）
 @csrf_exempt
 @require_http_methods(['GET','POST'])
@@ -823,3 +802,62 @@ def ai_chat_stream(request):
     except:
         logger.exception("token调用AI流式对话接口异常")
         return JsonResponse({'status':False,'data':'系统异常'})
+
+# 获取我的附件列表
+@require_http_methods(['GET'])
+def get_attachments(request):
+    token = request.GET.get('token', '')
+    kw = request.GET.get('kw', '')
+    limit = int(request.GET.get('limit', 10))
+    try:
+        token = UserToken.objects.get(token=token)
+        # 查询当前用户的附件
+        if kw == '':
+            attachments = Attachment.objects.filter(user=token.user).order_by('-create_time')
+        else:
+            attachments = Attachment.objects.filter(user=token.user, file_name__icontains=kw).order_by('-create_time')
+
+        # 分页处理
+        paginator = Paginator(attachments, limit)
+        page = request.GET.get('page', 1)
+        try:
+            attachments_page = paginator.page(page)
+        except PageNotAnInteger:
+            attachments_page = paginator.page(1)
+        except EmptyPage:
+            return JsonResponse({'status': True, 'data': [], 'cnt': attachments.count()})
+
+        attachment_list = []
+        for a in attachments_page:
+            item = {
+                'id': a.id,  # 附件ID
+                'file_name': a.file_name,  # 附件名
+                'file_size': a.file_size,  # 附件大小
+                'file_path': a.file_path.name,  # 附件路径
+                'create_time': a.create_time,  # 上传时间
+            }
+            attachment_list.append(item)
+        return JsonResponse({'status': True, 'data': attachment_list, 'cnt': attachments.count(), 'total_page': paginator.num_pages})
+    except ObjectDoesNotExist:
+        return JsonResponse({'status': False, 'data': _('token无效')})
+    except:
+        logger.exception(_("token获取附件列表异常"))
+        return JsonResponse({'status': False, 'data': _('系统异常')})
+
+# 上传附件
+@csrf_exempt
+@require_http_methods(['POST'])
+def upload_attachment(request):
+    attachment = request.FILES.get('attachment_upload', None)
+    token = request.GET.get('token', '')
+    try:
+        token = UserToken.objects.get(token=token)
+        if attachment is None:
+            return JsonResponse({'status': False, 'data': _('未选择文件')})
+        result = handle_attachment_upload(attachment, token.user, request)
+        return JsonResponse({'status': result['status'], 'data': result['data']})
+    except ObjectDoesNotExist:
+        return JsonResponse({'status': False, 'data': _('token无效')})
+    except Exception:
+        logger.exception(_("上传出错"))
+        return JsonResponse({'status': False, 'data': _('上传出错')})

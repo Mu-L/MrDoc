@@ -24,6 +24,8 @@ urlpatterns = [
     path('upload_img_url/',views.upload_img_url,name="api_upload_img_url"), # 上传url图片
     path('check_token/',views.check_token,name="api_check_token"), # 验证Token
     path('ai_chat_stream/',views.ai_chat_stream,name="api_ai_chat_stream"), # AI流式对话接口Token封装
+    path('get_attachments/',views.get_attachments,name="api_get_attachments"), # 获取我的附件列表
+    path('upload_file/',views.upload_attachment,name="api_upload_file"), # 上传附件
     # 跳转登录使用
     path('get_timestamp/',views.get_timestamp,name="get_timestamp"), # 获取服务器时间
     path('oauth0/',views.oauth0,name="oauth0"), # Token验证登录，非完整oauth
