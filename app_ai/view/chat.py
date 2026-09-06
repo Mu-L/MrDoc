@@ -33,6 +33,17 @@ class ChatSessionAuthentication(SessionAuthentication):
                 pass
         super().enforce_csrf(request)
 
+    def authenticate(self, request):
+        raw = request._request
+        # Token API封装视图（app_api.ai_chat_stream）已验证UserToken并注入用户身份。
+        # 父类SessionAuthentication.authenticate对注入用户会强制执行CSRF校验，
+        # 外部API客户端没有CSRF Token会导致403，这里识别标记后直接返回注入用户并跳过CSRF
+        if getattr(raw, '_token_api_authenticated', False):
+            user = getattr(raw, 'user', None)
+            if user and user.is_active:
+                return (user, None)
+        return super().authenticate(request)
+
 
 def chat_index(request):
     # Web聊天助手不开放欢迎语配置，使用固定默认欢迎语

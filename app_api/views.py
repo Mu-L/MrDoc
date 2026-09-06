@@ -794,7 +794,9 @@ def ai_chat_stream(request):
         return JsonResponse({'status': False, 'data': _('AI功能未启用')})
     try:
         token = UserToken.objects.get(token=token)
+        # 注入用户身份并标记Token已验证，内部ChatSessionAuthentication据此跳过CSRF校验（避免403）
         request.user = token.user
+        request._token_api_authenticated = True
         from app_ai.view.chat import ai_chat_stream as origin_ai_chat_stream
         return origin_ai_chat_stream(request)
     except ObjectDoesNotExist:
