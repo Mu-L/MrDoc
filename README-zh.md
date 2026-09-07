@@ -12,7 +12,7 @@
 <a href='https://gitee.com/zmister/MrDoc/stargazers'><img src='https://gitee.com/zmister/MrDoc/badge/star.svg?theme=gvp' alt='star'></img></a>
 <a href='https://github.com/zmister2016/MrDoc/stargazers'><img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/zmister2016/MrDoc?style=flat&logo=github"></a>
 <a href='https://atomgit.com/zmister/MrDoc/stargazers'><img src='https://atomgit.com/zmister/MrDoc/star/badge.svg' alt='star'></img></a>
-<img src="https://img.shields.io/badge/MrDoc-v1.0.0-brightgreen.svg" title="MrDoc" />
+<img src="https://img.shields.io/badge/MrDoc-v1.1.0-brightgreen.svg" title="MrDoc" />
 <img src="https://img.shields.io/badge/MrDocPro-v1.6.8-brightgreen.svg" title="MrDoc专业版" />
 <img src="https://img.shields.io/badge/Python-3.9+-blue.svg" title="Python" />
 <img src="https://img.shields.io/badge/Django-v4.2-important.svg" title="Django" />
@@ -37,7 +37,7 @@
 
 `MrDoc` 是基于`Python`开发的在线文档系统。
 
-MrDoc 适合作为个人和中小型团队的私有云文档、云笔记和知识管理工具，致力于成为优秀的私有化在线文档部署方案。
+MrDoc 适合作为个人和中小型团队的私有部署AI知识库，致力于成为优秀的私有化在线文档和知识库部署方案。
 
 你可以简单粗暴地将 MrDoc 视为「可私有部署的语雀」和「可在线编辑文档的GitBook」。
 
@@ -105,7 +105,6 @@ MrDoc 全系产品目前涵盖以下终端：
 	- 图片、附件、科学公式、音视频、思维导图、流程图、Echart图表；
 	- 文档排序、文档上级设置、文档模板插入；
 	- 文档标签设置；
-    - AI文档写作、AI文本润色、AI文档续写；
 
 - **📖文档阅读**
 	- 两栏式布局，三级目录层级显示，左侧文集大纲，右侧文档正文；
@@ -115,6 +114,12 @@ MrDoc 全系产品目前涵盖以下终端：
 	- 文档全文搜索；
 	- 文档分享码分享；
 	- 文档收藏；
+
+- **AI功能**
+  - AI知识库问答
+  - AI文档写作
+  - AI文本润色
+  - AI文档续写
 	
 - **其他特性**
     - SEO优化（搜索引擎收录支持、robots.txt配置、llms.txt配置、JSON-LD结构化网页信息）；

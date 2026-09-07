@@ -8,7 +8,7 @@
 </p>
 
 <p align="center">
-<img src="https://img.shields.io/badge/MrDoc-v1.0.0-brightgreen.svg" title="Mrdoc" />
+<img src="https://img.shields.io/badge/MrDoc-v1.1.0-brightgreen.svg" title="Mrdoc" />
 <img src="https://img.shields.io/badge/MrDocPro-v1.6.8-brightgreen.svg" title="MrDoc专业版" />
 <img src="https://img.shields.io/badge/Python-3.9+-blue.svg" title="Python" />
 <img src="https://img.shields.io/badge/Django-v4.2-important.svg" title="Django" />
@@ -67,7 +67,9 @@ username:test1  password:123456
     - Support the account based `API` interface, which can use the account `token` to get the corpus, upload pictures and create documents through the 'API';
     - Supports the project collaboration function. A project can have one Creator and multiple collaborators, and can flexibly select collaboration permissions;
     - It supports the function of document historical version to view and compare the differences between the historical version and the existing version, and restore a historical version to the current version;
-    - AI Write;
+- **🤖AI Knowledge**
+    - Support the function of AI chat, and provide the function of document writing based on AI
+    - Support the function of document writing based on AI
 
 Update Record : [CHANGES.md](./CHANGES.md)
 
